@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dealer Yamaha Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+body{font-family:Poppins;margin:0;background:#eef2f7}
+header{background:#0d47a1;color:#fff;padding:30px;text-align:center}
+nav{background:#082f6b;padding:10px;text-align:center}
+nav a{color:#fff;margin:0 15px;text-decoration:none}
+.section{padding:40px 20px;text-align:center}
+.container{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;padding:20px}
+.card{background:#fff;border-radius:12px;box-shadow:0 6px 15px rgba(0,0,0,.1);overflow:hidden}
+.card img{width:100%;height:180px;object-fit:cover}
+.card-content{padding:15px}
+.price{color:#0d47a1;font-weight:bold}
+.btn{background:#25d366;color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer;display:block;margin-top:10px;text-decoration:none}
+.form-box{max-width:500px;margin:auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+input,select{width:100%;padding:10px;margin:8px 0;border-radius:5px;border:1px solid #ccc}
+footer{background:#111;color:#fff;text-align:center;padding:20px}
+</style>
+</head>
+<body><header>
+<h1>Dealer Yamaha Premium</h1>
+<p>DP Ringan • Approval Cepat • Resmi</p>
+</header><nav>
+<a href="#produk">Produk</a>
+<a href="#simulasi">Simulasi</a>
+<a href="#pesan">Pemesanan</a>
+</nav><section id="produk" class="container">
+<div class="card">
+<img src="https://via.placeholder.com/300x200">
+<div class="card-content">
+<h3>Yamaha NMAX</h3>
+<p class="price">Rp 32.000.000</p>
+<a class="btn" onclick="pilihMotor('Yamaha NMAX',32000000)">Pilih</a>
+</div>
+</div><div class="card">
+<img src="https://via.placeholder.com/300x200">
+<div class="card-content">
+<h3>Yamaha Aerox</h3>
+<p class="price">Rp 28.500.000</p>
+<a class="btn" onclick="pilihMotor('Yamaha Aerox',28500000)">Pilih</a>
+</div>
+</div>
+</section><section id="simulasi" class="section">
+<h2>Simulasi Kredit</h2>
+<div class="form-box">
+<input type="text" id="motor_pilih" placeholder="Motor" readonly>
+<input type="number" id="harga" placeholder="Harga">
+<input type="number" id="dp" placeholder="DP">
+<select id="tenor">
+<option value="12">12 Bulan</option>
+<option value="24">24 Bulan</option>
+<option value="36">36 Bulan</option>
+</select>
+<button class="btn" onclick="hitungKredit()">Hitung</button>
+<p id="hasil"></p>
+</div>
+</section><section id="pesan" class="section">
+<h2>Form Pemesanan Lengkap</h2>
+<div class="form-box">
+<input type="text" id="nama" placeholder="Nama">
+<input type="text" id="nik" placeholder="NIK">
+<input type="text" id="alamat" placeholder="Alamat">
+<input type="text" id="pekerjaan" placeholder="Pekerjaan">
+<input type="text" id="motor" placeholder="Motor Dipilih">
+<button class="btn" onclick="kirimWA()">Kirim Data</button>
+</div>
+</section><footer>
+<p>© 2026 Dealer Yamaha Premium</p>
+</footer><script>
+function pilihMotor(nama,harga){
+document.getElementById('motor_pilih').value = nama;
+document.getElementById('motor').value = nama;
+document.getElementById('harga').value = harga;
+window.scrollTo({top:document.getElementById('simulasi').offsetTop,behavior:'smooth'});
+}
+
+function hitungKredit(){
+let harga=parseInt(document.getElementById('harga').value);
+let dp=parseInt(document.getElementById('dp').value);
+let tenor=parseInt(document.getElementById('tenor').value);
+let sisa=harga-dp;
+let bunga=0.02*tenor;
+let total=sisa+(sisa*bunga);
+let cicilan=total/tenor;
+document.getElementById('hasil').innerText='Cicilan: Rp '+Math.round(cicilan).toLocaleString();
+}
+
+function kirimWA(){
+let nama=document.getElementById('nama').value;
+let nik=document.getElementById('nik').value;
+let alamat=document.getElementById('alamat').value;
+let pekerjaan=document.getElementById('pekerjaan').value;
+let motor=document.getElementById('motor').value;
+
+let pesan=`Halo saya ingin kredit motor:%0A
+Nama:${nama}%0ANIK:${nik}%0AAlamat:${alamat}%0APekerjaan:${pekerjaan}%0AMotor:${motor}`;
+window.open('https://wa.me/6281234567890?text='+pesan,'_blank');
+}
+</script></body>
+</html>
